@@ -85,4 +85,23 @@ public class LibroService {
         }
 
     }
+    public List<Libro> top10LibrosBD() {
+        return libroRepository.top10LibrosBD();
+    }
+
+    public Optional<Autor> buscarAutorPorNombre(String nombre){
+        return autorRepository.buscarAutorPorNombre(nombre);
+    }
+
+    public List<Autor> buscarAutoresPorNacimiento(Integer fechaIngresada){
+        return autorRepository.buscarAutoresPorNacimiento(fechaIngresada);
+    }
+
+    public List<Autor> buscarAutoresPorFallecimiento(Integer fechaIngresada){
+        return autorRepository.buscarAutoresPorFallecimiento(fechaIngresada);
+    }
+
+    public List<Autor> listarAutoresFallecidos(Integer fechaIngresada){
+        return autorRepository.listarAutoresFallecidos(fechaIngresada);
+    }
 }

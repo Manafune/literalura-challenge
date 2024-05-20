@@ -1,14 +1,14 @@
 package com.literalura.challenge.principal;
 
 import com.literalura.challenge.model.*;
-import com.literalura.challenge.repository.AutorRepository;
-import com.literalura.challenge.repository.LibroRepository;
+import com.literalura.challenge.model.DatosLibro;
 import com.literalura.challenge.service.ConsumoAPI;
 import com.literalura.challenge.service.ConvierteDatos;
 import com.literalura.challenge.service.LibroService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -64,13 +64,13 @@ public class Principal {
                     generarEstadisticasDeLibrosBD();
                     break;
                 case 7:
-
+                    top10LibrosDB();
                     break;
                 case 8:
-
+                    buscarAutorPorNombre();
                     break;
                 case 9:
-
+                    listarAutoresPorOtrasConsultas();
                     break;
                 case 0:
                     System.out.println("Cerrando la aplicación...");
@@ -80,7 +80,6 @@ public class Principal {
             }
         }
     }
-
 
 
     private Datos getDatosLibro() {
@@ -176,7 +175,7 @@ public class Principal {
             List<Autor> autoresPorAño = service.listarAutoresPorAño(añoIngresado);
             if(!autoresPorAño.isEmpty()){
                 autoresPorAño.forEach(a -> System.out.println(
-                        "----- AUTORES -----" +
+                        "----- AUTOR -----" +
                                 "\nNombre: " + a.getNombre() +
                                 "\nFecha de nacimiento: " + a.getFechaDeNacimiento() +
                                 "\nFecha de fallecimiento: " + a.getFechaDeFallecimiento() +
@@ -236,28 +235,142 @@ public class Principal {
         System.out.println("Cantidad de registros evaluados para cálculos estadísticos: " + est.getCount());
     }
 
+    public void top10LibrosDB(){
+        try {
+            List<Libro> top10Libros = service.top10LibrosBD();
+            System.out.println("Top 10 libros mas descargados");
+            top10Libros.forEach(l -> System.out.println(
+                    "----- LIBRO -----" +
+                            "\nTitulo: " + l.getTitulo() +
+                            "\nAutor: " + l.getAutor().getNombre() +
+                            "\nIdioma: " + l.getIdioma().getIdiomaOmdb() +
+                            "\nNumero de descargas: " + l.getNumeroDeDescargas() +
+                            "\n-----------------\n"
+            ));
+        }catch (Exception e){
+            System.out.println("Se produjo un error al obtener los datos de los 10 libros mas descargados");
+        }
+    }
 
+    public void buscarAutorPorNombre(){
+        System.out.println("Ingrese el nombre del autor que desea buscar en la BD");
+        try {
+            String nombreAutor = teclado.nextLine();
+            Optional<Autor> autorBD = service.buscarAutorPorNombre(nombreAutor);
+            if(autorBD.isPresent()){
+                Autor autorEncontrado = autorBD.get();
+                System.out.println(
+                        "----- AUTOR ENCONTRADO -----" +
+                                "\nNombre: " + autorEncontrado.getNombre() +
+                                "\nFecha de nacimiento: " + autorEncontrado.getFechaDeNacimiento() +
+                                "\nFecha de fallecimiento: " + autorEncontrado.getFechaDeFallecimiento() +
+                                "\nLibros: " + autorEncontrado.getLibros() +
+                                "\n-----------------\n"
+                );
+            }else {
+                System.out.println("El autor no existe en la BD");
+            }
+        }catch (Exception e){
+            System.out.println("Introduce un nombre valido");
+        }
+    }
 
+    private void listarAutoresPorOtrasConsultas() {
+        var otrasConsultas = """
+                Ingresa la opcion por la cual desea listar los autores
+                1.- Listar autores por Año de Nacimiento
+                2.- Listar Autores por Año de Fallecimiento
+                3.- Listar Autores ya Fallecidos
+                """;
+        System.out.println(otrasConsultas);
+        try {
+            String input = teclado.nextLine();
+            var opcion = Integer.valueOf(input);
+            switch (opcion){
+                case 1:
+                    listarAutoresPorNacimiento();
+                    break;
+                case 2:
+                    listarAutoresPorFallecimiento();
+                    break;
+                case 3:
+                    listarAutoresFallecidos();
+                    break;
+            }
+        }catch (NumberFormatException e){
+            System.out.println("Ingresa un numero de acuerdo a la opcion, no letras");
+        }
+    }
 
+    private void listarAutoresFallecidos() {
+        try{
+            LocalDate fechaActual = LocalDate.now();
+            Integer año = fechaActual.getYear();
+            List<Autor> autoresYaFallecidos = service.listarAutoresFallecidos(año);
+            if(!autoresYaFallecidos.isEmpty()){
+                System.out.println("AUTORES YA FALLECIDOS");
+                autoresYaFallecidos.forEach(a -> System.out.println(
+                        "----- AUTOR -----" +
+                                "\nNombre: " + a.getNombre() +
+                                "\nFecha de nacimiento: " + a.getFechaDeNacimiento() +
+                                "\nFecha de fallecimiento: " + a.getFechaDeFallecimiento() +
+                                "\nLibros: " + a.getLibros() +
+                                "\n-----------------\n"));
+            }else {
+                System.out.println("No existen autores que fallecieron en la BD");
+            }
+        }catch (Exception e){
+            System.out.println("Ocurrio algun error inesperado"+e.getMessage());
+        }
+    }
 
-//        //top 10 libros
-//        System.out.println("Top 10 libros mas descargados");
-//        datos.resultados().stream()
-//                .sorted(Comparator.comparing(DatosLibros::numeroDeDescargas).reversed())
-//                .limit(10)
-//                .map(l -> l.titulo().toUpperCase())
-//                .forEach(System.out::println);
-//
+    private void listarAutoresPorFallecimiento() {
+        System.out.println("Introduce el año de fallecimiento que deseas buscar:");
+        try {
+            String input = teclado.nextLine();
+            var añoFallecimiento = Integer.valueOf(input);
+            List<Autor> autoresPorFallecimiento = service.buscarAutoresPorFallecimiento(añoFallecimiento);
+            if(!autoresPorFallecimiento.isEmpty()){
+                autoresPorFallecimiento.forEach(a -> System.out.println(
+                        "----- AUTOR -----" +
+                                "\nNombre: " + a.getNombre() +
+                                "\nFecha de nacimiento: " + a.getFechaDeNacimiento() +
+                                "\nFecha de fallecimiento: " + a.getFechaDeFallecimiento() +
+                                "\nLibros: " + a.getLibros() +
+                                "\n-----------------\n"
+                ));
+            }else {
+                System.out.println("No existen autores con el año de fallecimiento: " +añoFallecimiento);
+            }
+        }catch (NumberFormatException e){
+            System.out.println("Ingresa un año valido por favor");
+        }catch (Exception e){
+            System.out.println("Ocurrio un error"+e.getMessage());
+        }
+    }
 
-//        //trabajando con estadistica
-//        DoubleSummaryStatistics est = datos.resultados().stream()
-//                .filter(d -> d.numeroDeDescargas()>0.0)
-//                .collect(Collectors.summarizingDouble(DatosLibros::numeroDeDescargas));
-//
-//        System.out.println("Cantidad Media de Descargas: " + est.getAverage());
-//        System.out.println("Cantidad Maxima de Descargas: " + est.getMax());
-//        System.out.println("Cantidad Minima de Descargas: " + est.getMin());
-//        System.out.println("Cantidad de registros evaluados para calculos estadisticos: " + est.getCount());
-
-
+    private void listarAutoresPorNacimiento() {
+        System.out.println("Introduce el año de nacimiento que deseas buscar:");
+        try {
+            String input = teclado.nextLine();
+            var añoNacimiento = Integer.valueOf(input);
+            List<Autor> autoresPorNacimiento = service.buscarAutoresPorNacimiento(añoNacimiento);
+            if(!autoresPorNacimiento.isEmpty()){
+                autoresPorNacimiento.forEach(a -> System.out.println(
+                        "----- AUTOR -----" +
+                                "\nNombre: " + a.getNombre() +
+                                "\nFecha de nacimiento: " + a.getFechaDeNacimiento() +
+                                "\nFecha de fallecimiento: " + a.getFechaDeFallecimiento() +
+                                "\nLibros: " + a.getLibros() +
+                                "\n-----------------\n"
+                ));
+            }else {
+                System.out.println("No existen autores con el año de nacimiento: " +añoNacimiento);
+            }
+        }catch (NumberFormatException e){
+            System.out.println("Ingresa un año valido por favor");
+        }catch (Exception e){
+            System.out.println("Ocurrio un error"+e.getMessage());
+        }
+    }
 }
