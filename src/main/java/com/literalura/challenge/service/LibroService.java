@@ -1,17 +1,14 @@
 package com.literalura.challenge.service;
 
-import com.literalura.challenge.Repository.AutorRepository;
-import com.literalura.challenge.Repository.LibroRepository;
-import com.literalura.challenge.model.Autor;
-import com.literalura.challenge.model.DatosAutor;
-import com.literalura.challenge.model.DatosLibro;
-import com.literalura.challenge.model.Libro;
+import com.literalura.challenge.model.*;
+import com.literalura.challenge.repository.AutorRepository;
+import com.literalura.challenge.repository.LibroRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.DoubleSummaryStatistics;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class LibroService {
@@ -55,5 +52,37 @@ public class LibroService {
 
     public Optional<Autor> verificarAutorExistenteEnBD(String nombre){
         return autorRepository.findByNombre(nombre);
+    }
+
+    public List<Libro> listarLibrosRegistrados() {
+        return libroRepository.findAll();
+    }
+
+    public List<Autor> listarAutoresRegistrados() {
+        return autorRepository.findAll();
+    }
+
+    public List<Autor> listarAutoresPorAño(Integer añoIngresado) {
+        return autorRepository.listarAutoresPorAño(añoIngresado);
+    }
+
+    public List<Libro> listarLibrosPorIdioma(Idioma idiomaSeleccionado) {
+        return libroRepository.listarLibrosPorIdioma(idiomaSeleccionado);
+    }
+
+    public DoubleSummaryStatistics obtenerEstadisticasDeDescargas() {
+        // Obtener todos los libros de la base de datos
+        List<Libro> libros = libroRepository.findAll();
+        if (libros.isEmpty()) {
+            // No hay libros en la base de datos
+            System.out.println("No hay registros de libros en la base de datos.");
+            return new DoubleSummaryStatistics();
+        }else {
+            return libros.stream()
+                    .filter(libro -> libro.getNumeroDeDescargas() > 0.0)
+                    .mapToDouble(Libro::getNumeroDeDescargas)
+                    .summaryStatistics();
+        }
+
     }
 }

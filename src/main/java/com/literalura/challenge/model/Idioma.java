@@ -31,7 +31,7 @@ public enum Idioma {
         throw new IllegalArgumentException("Ninguna idioma encontrado: " + text);
     }
 
-    public String getIdioma(){
+    public String getIdiomaOmdb(){
         return this.idiomaOmdb;
     }
 }

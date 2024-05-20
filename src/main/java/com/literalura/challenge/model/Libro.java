@@ -17,7 +17,7 @@ public class Libro {
 
     @Enumerated(EnumType.STRING)
     private Idioma idioma;
-    private Integer numeroDeDescargas;
+    private Double numeroDeDescargas;
 
     public Libro(DatosLibro datosLibro) {
         this.titulo = datosLibro.titulo();
@@ -63,11 +63,16 @@ public class Libro {
         this.idioma = idioma;
     }
 
-    public Integer getNumeroDeDescargas() {
+    public Double getNumeroDeDescargas() {
         return numeroDeDescargas;
     }
 
-    public void setNumeroDeDescargas(Integer numeroDeDescargas) {
+    public void setNumeroDeDescargas(Double numeroDeDescargas) {
         this.numeroDeDescargas = numeroDeDescargas;
+    }
+
+    @Override
+    public String toString() {
+        return titulo;
     }
 }

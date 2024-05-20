@@ -1,7 +1,5 @@
 package com.literalura.challenge;
 
-import com.literalura.challenge.Repository.AutorRepository;
-import com.literalura.challenge.Repository.LibroRepository;
 import com.literalura.challenge.principal.Principal;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;

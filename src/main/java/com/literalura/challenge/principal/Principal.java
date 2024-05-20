@@ -1,20 +1,15 @@
 package com.literalura.challenge.principal;
 
-import com.literalura.challenge.Repository.AutorRepository;
-import com.literalura.challenge.Repository.LibroRepository;
-import com.literalura.challenge.model.Autor;
-import com.literalura.challenge.model.Datos;
-import com.literalura.challenge.model.DatosLibro;
-import com.literalura.challenge.model.Libro;
+import com.literalura.challenge.model.*;
+import com.literalura.challenge.repository.AutorRepository;
+import com.literalura.challenge.repository.LibroRepository;
 import com.literalura.challenge.service.ConsumoAPI;
 import com.literalura.challenge.service.ConvierteDatos;
 import com.literalura.challenge.service.LibroService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Scanner;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -27,11 +22,6 @@ public class Principal {
     @Autowired
     private LibroService service;
 
-    @Autowired
-    private LibroRepository libroRepository;
-
-    @Autowired
-    private AutorRepository autorRepository;
 
     public void muestraElMenu(){
         var opcion = -1;
@@ -59,19 +49,19 @@ public class Principal {
                     buscarLibroPorTitulo();
                     break;
                 case 2:
-
+                    listarLibrosRegistrados();
                     break;
                 case 3:
-
+                    listarAutoresRegistrados();
                     break;
                 case 4:
-
+                    listarAutoresPorAño();
                     break;
                 case 5:
-
+                    listarLibrosPorIdioma();
                     break;
                 case 6:
-
+                    generarEstadisticasDeLibrosBD();
                     break;
                 case 7:
 
@@ -90,6 +80,8 @@ public class Principal {
             }
         }
     }
+
+
 
     private Datos getDatosLibro() {
         System.out.println("Escribe el nombre del libro que deseas buscar");
@@ -148,6 +140,105 @@ public class Principal {
 
     }
 
+    private void listarLibrosRegistrados() {
+        List<Libro> librosRegistrados = service.listarLibrosRegistrados();
+        librosRegistrados.forEach(l -> System.out.println(
+                "----- LIBRO -----" +
+                        "\nTitulo: " + l.getTitulo() +
+                        "\nAutor: " + l.getAutor().getNombre() +
+                        "\nIdioma: " + l.getIdioma().getIdiomaOmdb() +
+                        "\nNumero de descargas: " + l.getNumeroDeDescargas() +
+                        "\n-----------------\n"
+        ));
+    }
+
+    private void listarAutoresRegistrados(){
+        List<Autor> autoresRegistrados = service.listarAutoresRegistrados();
+        if (autoresRegistrados.isEmpty()){
+            System.out.println("Auno no hay autores registrados en la BD");
+        }else {
+            autoresRegistrados.forEach(a -> System.out.println(
+                    "----- AUTORES -----" +
+                            "\nNombre: " + a.getNombre() +
+                            "\nFecha de nacimiento: " + a.getFechaDeNacimiento() +
+                            "\nFecha de fallecimiento: " + a.getFechaDeFallecimiento() +
+                            "\nLibros: " + a.getLibros() +
+                            "\n-----------------\n"
+            ));
+        }
+    }
+
+    private void listarAutoresPorAño() {
+        System.out.println("Ingrese el año vivo de autor(es) que desea buscar Ejemplo:1619");
+        try {
+            String entrada = teclado.nextLine();
+            var añoIngresado = Integer.valueOf(entrada);
+            List<Autor> autoresPorAño = service.listarAutoresPorAño(añoIngresado);
+            if(!autoresPorAño.isEmpty()){
+                autoresPorAño.forEach(a -> System.out.println(
+                        "----- AUTORES -----" +
+                                "\nNombre: " + a.getNombre() +
+                                "\nFecha de nacimiento: " + a.getFechaDeNacimiento() +
+                                "\nFecha de fallecimiento: " + a.getFechaDeFallecimiento() +
+                                "\nLibros: " + a.getLibros() +
+                                "\n-----------------\n"
+                ));
+            }else {
+                System.out.println("No hay autores vivos en el año ingresado que se encuentren registrados en la BD");
+            }
+        }catch (NumberFormatException e){
+            System.out.println("Introduce un año valido");
+        }catch (InputMismatchException e){
+            System.out.println("Favor de ingresar numeros de 4 cifras");
+        }catch (Exception e){
+            System.out.println("Ocurrio un error Inesperado"+e.getMessage() );
+        }
+    }
+
+    private void listarLibrosPorIdioma(){
+        var menuIdiomas = """
+                Ingrese el idioma para buscar los libros:
+                es - Español
+                en - Inglés
+                fr - Francés
+                pt - Portugués
+                """;
+        System.out.println(menuIdiomas);
+        var idiomaIngresado = teclado.nextLine();
+        if(idiomaIngresado.equalsIgnoreCase("es") || idiomaIngresado.equalsIgnoreCase("en")
+                || idiomaIngresado.equalsIgnoreCase("fr") || idiomaIngresado.equalsIgnoreCase("pt")){
+            Idioma idiomaSeleccionado = Idioma.fromString(idiomaIngresado);
+            List<Libro> librosPorIdioma = service.listarLibrosPorIdioma(idiomaSeleccionado);
+            if(librosPorIdioma.isEmpty()){
+                System.out.println("No hay libros registrados en ese idioma en la BD");
+            }else {
+                librosPorIdioma.forEach(l -> System.out.println(
+                        "----- LIBRO -----" +
+                                "\nTitulo: " + l.getTitulo() +
+                                "\nAutor: " + l.getAutor().getNombre() +
+                                "\nIdioma: " + l.getIdioma().getIdiomaOmdb() +
+                                "\nNumero de descargas: " + l.getNumeroDeDescargas() +
+                                "\n-----------------\n"
+                ));
+            }
+        } else {
+            System.out.println("Por favor selecciona un idioma valido");
+        }
+    }
+
+    public void generarEstadisticasDeLibrosBD() {
+
+        DoubleSummaryStatistics est = service.obtenerEstadisticasDeDescargas();
+        System.out.println("Estadísticas de descargas de los libros de la BD");
+        System.out.println("Cantidad Media de Descargas: " + est.getAverage());
+        System.out.println("Cantidad Máxima de Descargas: " + est.getMax());
+        System.out.println("Cantidad Mínima de Descargas: " + est.getMin());
+        System.out.println("Cantidad de registros evaluados para cálculos estadísticos: " + est.getCount());
+    }
+
+
+
+
 
 //        //top 10 libros
 //        System.out.println("Top 10 libros mas descargados");
@@ -157,21 +248,7 @@ public class Principal {
 //                .map(l -> l.titulo().toUpperCase())
 //                .forEach(System.out::println);
 //
-//        // Busqueda de libro por nombre
-//        System.out.println("Ingrese el nombre del libro que desea buscar");
-//        var tituloLibro = teclado.nextLine();
-//        json = consumoAPI.obtenerDatos(URL_BASE+"?search="+tituloLibro.replace(" ","+"));
-//        var datosBusqueda = conversor.obtenerDatos(json, Datos.class);
-//        Optional<DatosLibros> libroBuscado = datosBusqueda.resultados().stream()
-//                .filter(l -> l.titulo().toUpperCase().contains(tituloLibro.toUpperCase()))
-//                .findFirst();
-//        if(libroBuscado.isPresent()){
-//            System.out.println("Libro Encontrado: ");
-//            System.out.println(libroBuscado.get());
-//        }else {
-//            System.out.println("Libro no encontrado");
-//        }
-//
+
 //        //trabajando con estadistica
 //        DoubleSummaryStatistics est = datos.resultados().stream()
 //                .filter(d -> d.numeroDeDescargas()>0.0)
