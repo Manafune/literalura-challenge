@@ -1,4 +1,4 @@
-## LiterAlura
+# LiterAlura
 
 LiterAlura es una aplicación de backend desarrollada como solución al challenge propuesto por Alura Latam. Esta aplicación proporciona funcionalidades para gestionar un catálogo de libros, permitiendo a los usuarios realizar diversas operaciones como búsqueda por título, listar libros registrados, listar autores, buscar autores vivos en un año específico y filtrar libros por idioma. Además, maneja la posibilidad de errores al buscar libros inexistentes y evita la inserción duplicada de libros en la base de datos.
 
